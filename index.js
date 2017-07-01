@@ -8,8 +8,19 @@ const fs = require('fs'),
   crypto = require('crypto'),
   argv = require('minimist')(process.argv.slice(2)),
   chalk = require('chalk'),
-  template = require('./lib/template').cssTemplate
+  template = require('./lib/template').cssTemplate,
+  glyphList = require('./lib/template').glyphTemplate,
+  opentype = require('opentype.js'),
   log = console.log;
+
+function toArrayBuffer(buf) {
+    var ab = new ArrayBuffer(buf.length);
+    var view = new Uint8Array(ab);
+    for (var i = 0; i < buf.length; ++i) {
+        view[i] = buf[i];
+    }
+    return ab;
+}
 
 if (!argv["_"]) {
   log(chalk.red('Source option was not specified. Use a glob to specify the src files'))
@@ -98,10 +109,17 @@ const relativeDist = getPath(sourcePath, absoluteOutputPath)
 
 Promise.all(allFonts).then((data) => {
   log(chalk.green(`Writing fonts to disk`))
+
   data.forEach(data => {
     log(chalk.green(`writing font ${data.name}`))
     const content = template(data, relativeDist)
-    fs.writeFileSync(`${absoluteOutputPath}/${data.name}.css`, content,'utf-8')
+
+    const font = opentype.parse(toArrayBuffer(data.ttf.data))
+    const glyphs = Object.keys(font.glyphs.glyphs).map(key => font.glyphs.glyphs[key]);
+
+    const createGlyphList = glyphList(glyphs)
+
+    fs.writeFileSync(`${absoluteOutputPath}/${data.name}.css`, content + createGlyphList,'utf-8')
   })
 }).then(() => {
   log(chalk.green(`Successfully encoded all fonts`))

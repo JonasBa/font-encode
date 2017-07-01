@@ -25,6 +25,7 @@
     "fs": "0.0.1-security",
     "glob": "^7.1.2",
     "minimist": "^1.2.0",
+    "opentype.js": "^0.7.2",
     "path": "^0.12.7",
     "ttf2woff": "^2.0.1",
     "ttf2woff2": "^2.0.3"
